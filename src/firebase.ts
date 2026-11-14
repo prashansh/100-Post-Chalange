@@ -14,9 +14,16 @@ const getEnv = (key: string, fallback: string = '') => {
   return fallback;
 };
 
+const getAuthDomain = () => {
+  if (typeof window !== 'undefined' && window.location.hostname.includes('100dayscontentchallenge.in')) {
+    return '100dayscontentchallenge.in';
+  }
+  return getEnv('VITE_FIREBASE_AUTH_DOMAIN', 'creatortoolkit-53489.firebaseapp.com');
+};
+
 const firebaseConfig = {
   apiKey:            getEnv('VITE_FIREBASE_API_KEY', 'AIzaSyAjTJM-l93h_o3-gWhEpUmH1S40zP78ehw'),
-  authDomain:        getEnv('VITE_FIREBASE_AUTH_DOMAIN', 'creatortoolkit-53489.firebaseapp.com'),
+  authDomain:        getAuthDomain(),
   projectId:         getEnv('VITE_FIREBASE_PROJECT_ID', 'creatortoolkit-53489'),
   storageBucket:     getEnv('VITE_FIREBASE_STORAGE_BUCKET', 'creatortoolkit-53489.firebasestorage.app'),
   messagingSenderId: getEnv('VITE_FIREBASE_MESSAGING_SENDER_ID', '759197627794'),
