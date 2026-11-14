@@ -377,6 +377,19 @@ export const LoginPage: React.FC = () => {
                   <ArrowRight className="w-4 h-4 text-stone-400 group-hover:text-white group-hover:translate-x-0.5 transition-all ml-auto" />
                 )}
               </button>
+
+              <div className="text-center pt-2">
+                <p className="text-xs text-stone-500 font-medium">
+                  Prefer email?{' '}
+                  <button
+                    type="button"
+                    onClick={() => { setActiveMethod('email'); setEmailMode('signup'); resetMessages(); }}
+                    className="font-bold text-stone-900 hover:underline cursor-pointer"
+                  >
+                    Create new account with email
+                  </button>
+                </p>
+              </div>
             </div>
           )}
 
@@ -384,124 +397,158 @@ export const LoginPage: React.FC = () => {
           {/* TAB 2: EMAIL & PASSWORD                            */}
           {/* ═══════════════════════════════════════════════════ */}
           {activeMethod === 'email' && (
-            <form onSubmit={handleEmailSubmit} className="space-y-4">
-              {emailMode === 'signup' && (
+            <div className="space-y-4">
+              {/* Email Mode Sub-Tabs */}
+              <div className="flex items-center bg-stone-100 p-1 rounded-xl border border-stone-200">
+                <button
+                  type="button"
+                  onClick={() => { setEmailMode('signin'); resetMessages(); }}
+                  className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                    emailMode === 'signin'
+                      ? 'bg-stone-900 text-white shadow-sm'
+                      : 'text-stone-600 hover:text-stone-900'
+                  }`}
+                >
+                  Sign In
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setEmailMode('signup'); resetMessages(); }}
+                  className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                    emailMode === 'signup'
+                      ? 'bg-amber-400 text-stone-900 shadow-sm'
+                      : 'text-stone-600 hover:text-stone-900'
+                  }`}
+                >
+                  ✨ Create New Account
+                </button>
+              </div>
+
+              <form onSubmit={handleEmailSubmit} className="space-y-4">
+                {emailMode === 'signup' && (
+                  <div>
+                    <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1.5">
+                      Your Full Name
+                    </label>
+                    <div className="relative">
+                      <UserIcon className="w-4 h-4 text-stone-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                      <input
+                        type="text"
+                        required
+                        value={displayName}
+                        onChange={(e) => setDisplayName(e.target.value)}
+                        placeholder="e.g. Alex Rivera"
+                        className="w-full bg-white border border-stone-300 focus:border-stone-900 focus:ring-1 focus:ring-stone-900 rounded-xl pl-10 pr-4 py-2.5 text-sm text-stone-900 placeholder:text-stone-400 outline-none transition-all"
+                      />
+                    </div>
+                  </div>
+                )}
+
                 <div>
                   <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1.5">
-                    Your Name
+                    Email Address
                   </label>
                   <div className="relative">
-                    <UserIcon className="w-4 h-4 text-stone-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    <Mail className="w-4 h-4 text-stone-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                     <input
-                      type="text"
-                      value={displayName}
-                      onChange={(e) => setDisplayName(e.target.value)}
-                      placeholder="e.g. Alex Rivera"
+                      type="email"
+                      required
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="creator@example.com"
                       className="w-full bg-white border border-stone-300 focus:border-stone-900 focus:ring-1 focus:ring-stone-900 rounded-xl pl-10 pr-4 py-2.5 text-sm text-stone-900 placeholder:text-stone-400 outline-none transition-all"
                     />
                   </div>
                 </div>
-              )}
 
-              <div>
-                <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1.5">
-                  Email Address
-                </label>
-                <div className="relative">
-                  <Mail className="w-4 h-4 text-stone-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                  <input
-                    type="email"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="creator@example.com"
-                    className="w-full bg-white border border-stone-300 focus:border-stone-900 focus:ring-1 focus:ring-stone-900 rounded-xl pl-10 pr-4 py-2.5 text-sm text-stone-900 placeholder:text-stone-400 outline-none transition-all"
-                  />
-                </div>
-              </div>
+                {emailMode !== 'forgot' && (
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider">
+                        {emailMode === 'signup' ? 'Create Password (min 6 chars)' : 'Password'}
+                      </label>
+                      {emailMode === 'signin' && (
+                        <button
+                          type="button"
+                          onClick={() => { setEmailMode('forgot'); resetMessages(); }}
+                          className="text-xs font-bold text-amber-700 hover:text-amber-800 hover:underline cursor-pointer"
+                        >
+                          Forgot password?
+                        </button>
+                      )}
+                    </div>
+                    <div className="relative">
+                      <Lock className="w-4 h-4 text-stone-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                      <input
+                        type="password"
+                        required
+                        minLength={6}
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        placeholder="••••••••"
+                        className="w-full bg-white border border-stone-300 focus:border-stone-900 focus:ring-1 focus:ring-stone-900 rounded-xl pl-10 pr-4 py-2.5 text-sm text-stone-900 placeholder:text-stone-400 outline-none transition-all"
+                      />
+                    </div>
+                  </div>
+                )}
 
-              {emailMode !== 'forgot' && (
-                <div>
-                  <div className="flex items-center justify-between mb-1.5">
-                    <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider">
-                      Password
-                    </label>
-                    {emailMode === 'signin' && (
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className={`w-full flex items-center justify-center gap-2 font-bold text-sm rounded-xl py-3 transition-all shadow-sm hover:shadow-md disabled:opacity-70 disabled:cursor-not-allowed cursor-pointer ${
+                    emailMode === 'signup'
+                      ? 'bg-amber-400 hover:bg-amber-300 text-stone-900 border-2 border-stone-900 font-black'
+                      : 'bg-stone-900 hover:bg-stone-800 active:bg-black text-white'
+                  }`}
+                >
+                  {loading ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : emailMode === 'signup' ? (
+                    <UserPlus className="w-4 h-4" />
+                  ) : emailMode === 'forgot' ? (
+                    <KeyRound className="w-4 h-4" />
+                  ) : (
+                    <LogIn className="w-4 h-4" />
+                  )}
+                  <span>
+                    {loading
+                      ? 'Setting up your account...'
+                      : emailMode === 'signup'
+                      ? '🚀 Create Account & Launch Dashboard'
+                      : emailMode === 'forgot'
+                      ? 'Send Reset Link'
+                      : 'Sign In with Email'}
+                  </span>
+                </button>
+
+                {/* Mode switch */}
+                <div className="text-center pt-2">
+                  {emailMode === 'signin' ? (
+                    <p className="text-xs text-stone-500 font-medium">
+                      Don't have an account?{' '}
                       <button
                         type="button"
-                        onClick={() => { setEmailMode('forgot'); resetMessages(); }}
-                        className="text-xs font-bold text-amber-700 hover:text-amber-800 hover:underline cursor-pointer"
+                        onClick={() => { setEmailMode('signup'); resetMessages(); }}
+                        className="font-bold text-stone-900 hover:underline cursor-pointer"
                       >
-                        Forgot password?
+                        Create one
                       </button>
-                    )}
-                  </div>
-                  <div className="relative">
-                    <Lock className="w-4 h-4 text-stone-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                    <input
-                      type="password"
-                      required
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      placeholder="••••••••"
-                      className="w-full bg-white border border-stone-300 focus:border-stone-900 focus:ring-1 focus:ring-stone-900 rounded-xl pl-10 pr-4 py-2.5 text-sm text-stone-900 placeholder:text-stone-400 outline-none transition-all"
-                    />
-                  </div>
+                    </p>
+                  ) : (
+                    <p className="text-xs text-stone-500 font-medium">
+                      Already have an account?{' '}
+                      <button
+                        type="button"
+                        onClick={() => { setEmailMode('signin'); resetMessages(); }}
+                        className="font-bold text-stone-900 hover:underline cursor-pointer"
+                      >
+                        Sign in
+                      </button>
+                    </p>
+                  )}
                 </div>
-              )}
-
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full flex items-center justify-center gap-2 bg-stone-900 hover:bg-stone-800 active:bg-black text-white font-bold text-sm rounded-xl py-3 transition-all shadow-sm hover:shadow-md disabled:opacity-70 disabled:cursor-not-allowed cursor-pointer"
-              >
-                {loading ? (
-                  <Loader2 className="w-4 h-4 animate-spin text-white" />
-                ) : emailMode === 'signup' ? (
-                  <UserPlus className="w-4 h-4" />
-                ) : emailMode === 'forgot' ? (
-                  <KeyRound className="w-4 h-4" />
-                ) : (
-                  <LogIn className="w-4 h-4" />
-                )}
-                <span>
-                  {loading
-                    ? 'Processing...'
-                    : emailMode === 'signup'
-                    ? 'Create Creator Account'
-                    : emailMode === 'forgot'
-                    ? 'Send Reset Link'
-                    : 'Sign In with Email'}
-                </span>
-              </button>
-
-              {/* Mode switch */}
-              <div className="text-center pt-2">
-                {emailMode === 'signin' ? (
-                  <p className="text-xs text-stone-500 font-medium">
-                    Don't have an account?{' '}
-                    <button
-                      type="button"
-                      onClick={() => { setEmailMode('signup'); resetMessages(); }}
-                      className="font-bold text-stone-900 hover:underline cursor-pointer"
-                    >
-                      Create one
-                    </button>
-                  </p>
-                ) : (
-                  <p className="text-xs text-stone-500 font-medium">
-                    Already have an account?{' '}
-                    <button
-                      type="button"
-                      onClick={() => { setEmailMode('signin'); resetMessages(); }}
-                      className="font-bold text-stone-900 hover:underline cursor-pointer"
-                    >
-                      Sign in
-                    </button>
-                  </p>
-                )}
-              </div>
-            </form>
+              </form>
+            </div>
           )}
 
           {/* ═══════════════════════════════════════════════════ */}

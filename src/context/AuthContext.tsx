@@ -17,6 +17,9 @@ import {
 import { doc, getDoc } from 'firebase/firestore';
 import { auth, googleProvider, appleProvider, db } from '../firebase';
 import { withTimeout } from '../utils/firestore';
+import { generateInitialPosts, DEFAULT_MILESTONES } from '../data/initialData';
+import { savePosts, saveMilestones } from '../utils/storage';
+import { apiSyncUserProfile, apiBatchSavePosts, apiGetUserProfile } from '../utils/api';
 
 declare global {
   interface Window {
@@ -99,31 +102,48 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (cached) {
       setProfile(cached);
       setAuthStatus('authenticated');
-      // Sync fresh Firestore in background
-      fetchFirestoreProfile(firebaseUser.uid).then((fresh) => {
-        if (fresh) {
-          localStorage.setItem(getProfileCacheKey(firebaseUser.uid), JSON.stringify(fresh));
-          setProfile(fresh);
-        }
-      });
       return;
     }
 
-    // 2. Fresh device / mobile phone: fetch directly from authoritative Firestore cloud database
+    // 2. Check backend SQLite database
     try {
-      const firestoreProfile = await fetchFirestoreProfile(firebaseUser.uid);
-      if (firestoreProfile) {
-        localStorage.setItem(getProfileCacheKey(firebaseUser.uid), JSON.stringify(firestoreProfile));
-        setProfile(firestoreProfile);
+      const backendProfile = await apiGetUserProfile(firebaseUser.uid);
+      if (backendProfile) {
+        localStorage.setItem(getProfileCacheKey(firebaseUser.uid), JSON.stringify(backendProfile));
+        setProfile(backendProfile);
         setAuthStatus('authenticated');
-      } else {
-        setProfile(null);
-        setAuthStatus('needs_profile');
+        return;
       }
-    } catch {
-      setProfile(null);
-      setAuthStatus('needs_profile');
+    } catch (e) {
+      // ignore
     }
+
+    // 3. Fallback/New Account: immediately generate profile and challenge
+    const chosenName = firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'Creator';
+    const handle = `@${chosenName.toLowerCase().replace(/[^a-z0-9]/g, '') || 'creator'}`;
+    const newProfile: UserProfile = {
+      uid: firebaseUser.uid,
+      email: firebaseUser.email || '',
+      displayName: chosenName,
+      photoURL: firebaseUser.photoURL || '',
+      creatorHandle: handle,
+      country: 'Global',
+      dateOfBirth: '2000-01-01',
+      niche: 'Creator Economy & Tools',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      challengeStartDate: new Date().toISOString().slice(0, 10),
+    };
+
+    localStorage.setItem(getProfileCacheKey(firebaseUser.uid), JSON.stringify(newProfile));
+    const initialPosts = generateInitialPosts(newProfile.challengeStartDate);
+    savePosts(initialPosts, firebaseUser.uid);
+    saveMilestones(DEFAULT_MILESTONES, firebaseUser.uid);
+    apiSyncUserProfile(newProfile).catch(console.warn);
+    apiBatchSavePosts(firebaseUser.uid, initialPosts).catch(console.warn);
+
+    setProfile(newProfile);
+    setAuthStatus('authenticated');
   };
 
   const refreshProfile = async () => {
@@ -270,10 +290,38 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setAuthStatus('loading');
     try {
       const res = await createUserWithEmailAndPassword(auth, email.trim(), pass);
-      if (name && name.trim()) {
-        await updateProfile(res.user, { displayName: name.trim() });
+      const chosenName = name?.trim() || email.split('@')[0] || 'Creator';
+      try {
+        await updateProfile(res.user, { displayName: chosenName });
+      } catch (e) {
+        // ignore
       }
-      await resolveUser(res.user);
+
+      const handle = `@${chosenName.toLowerCase().replace(/[^a-z0-9]/g, '') || 'creator'}`;
+      const newProfile: UserProfile = {
+        uid: res.user.uid,
+        email: res.user.email || email.trim(),
+        displayName: chosenName,
+        photoURL: '',
+        creatorHandle: handle,
+        country: 'Global',
+        dateOfBirth: '2000-01-01',
+        niche: 'Creator Economy & Tools',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        challengeStartDate: new Date().toISOString().slice(0, 10),
+      };
+
+      localStorage.setItem(getProfileCacheKey(res.user.uid), JSON.stringify(newProfile));
+      const initialPosts = generateInitialPosts(newProfile.challengeStartDate);
+      savePosts(initialPosts, res.user.uid);
+      saveMilestones(DEFAULT_MILESTONES, res.user.uid);
+      apiSyncUserProfile(newProfile).catch(console.warn);
+      apiBatchSavePosts(res.user.uid, initialPosts).catch(console.warn);
+
+      setUser(res.user);
+      setProfile(newProfile);
+      setAuthStatus('authenticated');
     } catch (err) {
       setAuthStatus('unauthenticated');
       throw err;
