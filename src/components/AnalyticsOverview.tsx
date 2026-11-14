@@ -20,8 +20,9 @@ export const AnalyticsOverview: React.FC<AnalyticsOverviewProps> = ({ posts, onC
   const totalComments = publishedPosts.reduce((acc, p) => acc + (p.comments || 0), 0);
   const totalShares = publishedPosts.reduce((acc, p) => acc + (p.shares || 0), 0);
 
+  const safeTotal = totalPosts > 0 ? totalPosts : 1;
   const avgViewsPerPost = publishedCount > 0 ? Math.round(totalViews / publishedCount) : 0;
-  const completionPercent = Math.round((publishedCount / totalPosts) * 100);
+  const completionPercent = totalPosts > 0 ? Math.round((publishedCount / safeTotal) * 100) : 0;
 
   // Platform distribution
   const platformCounts: Record<string, number> = {};
@@ -106,13 +107,13 @@ export const AnalyticsOverview: React.FC<AnalyticsOverviewProps> = ({ posts, onC
                 <span className="text-green-700 flex items-center gap-1.5">
                   <CheckCircle2 className="w-3.5 h-3.5 text-creator-green" /> Published
                 </span>
-                <span>{publishedCount} ({Math.round((publishedCount / totalPosts) * 100)}%)</span>
+                <span>{publishedCount} ({Math.round((publishedCount / safeTotal) * 100)}%)</span>
               </div>
               <div className="w-full h-2.5 bg-stone-100 rounded-full overflow-hidden flex">
-                <div style={{ width: `${(publishedCount / totalPosts) * 100}%` }} className="bg-creator-green" />
-                <div style={{ width: `${(inProgressCount / totalPosts) * 100}%` }} className="bg-amber-400" />
-                <div style={{ width: `${(readyCount / totalPosts) * 100}%` }} className="bg-blue-400" />
-                <div style={{ width: `${(draftCount / totalPosts) * 100}%` }} className="bg-stone-300" />
+                <div style={{ width: `${(publishedCount / safeTotal) * 100}%` }} className="bg-creator-green" />
+                <div style={{ width: `${(inProgressCount / safeTotal) * 100}%` }} className="bg-amber-400" />
+                <div style={{ width: `${(readyCount / safeTotal) * 100}%` }} className="bg-blue-400" />
+                <div style={{ width: `${(draftCount / safeTotal) * 100}%` }} className="bg-stone-300" />
               </div>
               <div className="flex items-center gap-4 text-[11px] font-semibold text-stone-500 pt-1">
                 <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-creator-green" /> Published: {publishedCount}</span>

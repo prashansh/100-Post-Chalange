@@ -60,7 +60,9 @@ export const KanbanView: React.FC<KanbanViewProps> = ({ posts, onSelectDay }) =>
                   <div className="mt-2.5 pt-2 border-t border-stone-200 flex items-center justify-between text-[10px] text-stone-400">
                     <span className="flex items-center gap-1 font-medium">
                       <Clock className="w-3 h-3" />
-                      {new Date(post.publishDateETA).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                      {post.publishDateETA && !isNaN(new Date(post.publishDateETA).getTime())
+                        ? new Date(post.publishDateETA).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
+                        : 'No ETA'}
                     </span>
                     {post.isMilestone && (
                       <span className="text-amber-600 font-bold flex items-center gap-0.5">

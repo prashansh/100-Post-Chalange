@@ -165,7 +165,7 @@ export const PostDetailView: React.FC<PostDetailViewProps> = ({
   const handleAddShot = () => {
     if (!newShotText.trim()) return;
     const newShots = [
-      ...post.shotList,
+      ...(post.shotList || []),
       { id: Date.now().toString(), text: newShotText.trim(), done: false }
     ];
     handleChange('shotList', newShots);
@@ -173,31 +173,32 @@ export const PostDetailView: React.FC<PostDetailViewProps> = ({
   };
 
   const handleToggleShot = (id: string) => {
-    const newShots = post.shotList.map((s) => (s.id === id ? { ...s, done: !s.done } : s));
+    const newShots = (post.shotList || []).map((s) => (s.id === id ? { ...s, done: !s.done } : s));
     handleChange('shotList', newShots);
   };
 
   const handleDeleteShot = (id: string) => {
-    const newShots = post.shotList.filter((s) => s.id !== id);
+    const newShots = (post.shotList || []).filter((s) => s.id !== id);
     handleChange('shotList', newShots);
   };
 
   const handleAddBullet = () => {
     if (!newBulletText.trim()) return;
-    handleChange('bulletPoints', [...post.bulletPoints, newBulletText.trim()]);
+    handleChange('bulletPoints', [...(post.bulletPoints || []), newBulletText.trim()]);
     setNewBulletText('');
   };
 
   const handleDeleteBullet = (idx: number) => {
     handleChange(
       'bulletPoints',
-      post.bulletPoints.filter((_, i) => i !== idx)
+      (post.bulletPoints || []).filter((_, i) => i !== idx)
     );
   };
 
   // Formatted date string
-  const etaDate = new Date(post.publishDateETA);
-  const isPast = etaDate.getTime() < Date.now() && post.status !== 'published';
+  const etaDate = post.publishDateETA ? new Date(post.publishDateETA) : null;
+  const isEtaValid = Boolean(etaDate && !isNaN(etaDate.getTime()));
+  const isPast = isEtaValid && etaDate!.getTime() < Date.now() && post.status !== 'published';
 
   return (
     <div className="max-w-5xl mx-auto py-6 animate-in fade-in duration-200">
@@ -320,7 +321,7 @@ export const PostDetailView: React.FC<PostDetailViewProps> = ({
             <div className="flex items-center gap-2 text-xs">
               <span className="font-semibold text-stone-600 flex items-center gap-1 bg-stone-100 px-2.5 py-1 rounded-lg">
                 <Clock className="w-3.5 h-3.5 text-stone-400" />
-                ETA: {etaDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                ETA: {isEtaValid ? etaDate!.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : 'Not set'}
               </span>
               <span className="font-bold text-stone-800 bg-amber-100 border border-amber-300 px-2.5 py-1 rounded-lg uppercase">
                 {post.platform}
@@ -361,7 +362,7 @@ export const PostDetailView: React.FC<PostDetailViewProps> = ({
               }`}
             >
               <Video className="w-4 h-4" />
-              <span>Visuals & B-Roll ({post.shotList.filter((s) => s.done).length}/{post.shotList.length})</span>
+              <span>Visuals & B-Roll ({(post.shotList || []).filter((s) => s.done).length}/{(post.shotList || []).length})</span>
             </button>
             <button
               onClick={() => setActiveTab('schedule')}
@@ -557,7 +558,7 @@ export const PostDetailView: React.FC<PostDetailViewProps> = ({
                   Key Talking Points
                 </label>
                 <div className="space-y-2 mb-2">
-                  {post.bulletPoints.map((bullet, idx) => (
+                  {(post.bulletPoints || []).map((bullet, idx) => (
                     <div key={idx} className="flex items-center gap-2 bg-[#faf7f2] px-3 py-2 rounded-xl border border-stone-200">
                       <span className="w-5 h-5 rounded-full bg-stone-200 text-stone-700 flex items-center justify-center text-[10px] font-bold flex-shrink-0">
                         {idx + 1}
@@ -769,12 +770,12 @@ export const PostDetailView: React.FC<PostDetailViewProps> = ({
                 <p className="text-xs text-stone-500">Check off shots as you film them to stay organized.</p>
               </div>
               <span className="text-xs font-black text-stone-700 bg-stone-100 px-2.5 py-1 rounded-lg">
-                {post.shotList.filter((s) => s.done).length} / {post.shotList.length} Filmed
+                {(post.shotList || []).filter((s) => s.done).length} / {(post.shotList || []).length} Filmed
               </span>
             </div>
 
             <div className="space-y-2 mb-4">
-              {post.shotList.map((shot) => (
+              {(post.shotList || []).map((shot) => (
                 <div
                   key={shot.id}
                   onClick={() => handleToggleShot(shot.id)}
@@ -863,7 +864,9 @@ export const PostDetailView: React.FC<PostDetailViewProps> = ({
                   <Clock className="w-3 h-3" />
                   {isPast
                     ? '⚠️ Target date has passed! Keep the momentum and finish filming today.'
-                    : `Scheduled for ${etaDate.toLocaleString()}`}
+                    : isEtaValid
+                    ? `Scheduled for ${etaDate!.toLocaleString()}`
+                    : 'Schedule date not set'}
                 </p>
               </div>
 

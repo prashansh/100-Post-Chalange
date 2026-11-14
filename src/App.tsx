@@ -260,10 +260,10 @@ const Dashboard: React.FC<DashboardProps> = ({ authProfile, user, signOut }) => 
       if (searchQuery.trim()) {
         const query = searchQuery.toLowerCase();
         const matchesDay = p.day.toString() === query || `day ${p.day}`.includes(query);
-        const matchesTitle = p.title.toLowerCase().includes(query);
-        const matchesIdea = p.idea.toLowerCase().includes(query);
-        const matchesHook = (p.spokenHook + p.textOverlayHook + p.visualHook).toLowerCase().includes(query);
-        const matchesScript = p.script.toLowerCase().includes(query);
+        const matchesTitle = (p.title || '').toLowerCase().includes(query);
+        const matchesIdea = (p.idea || '').toLowerCase().includes(query);
+        const matchesHook = ((p.spokenHook || '') + (p.textOverlayHook || '') + (p.visualHook || '')).toLowerCase().includes(query);
+        const matchesScript = (p.script || '').toLowerCase().includes(query);
         return matchesDay || matchesTitle || matchesIdea || matchesHook || matchesScript;
       }
       return true;

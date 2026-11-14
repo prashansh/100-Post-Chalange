@@ -22,7 +22,8 @@ export const MilestoneBar: React.FC<MilestoneBarProps> = ({
   const postsUntilNext = nextMilestone ? nextMilestone.day - publishedCount : 0;
 
   // Percentage for the green progress bar (clamped 0 to 100)
-  const progressPercent = Math.min(100, Math.max(0, (publishedCount / totalPosts) * 100));
+  const safeTotal = totalPosts > 0 ? totalPosts : 100;
+  const progressPercent = Math.min(100, Math.max(0, (publishedCount / safeTotal) * 100));
 
   // Current month name for pill
   const currentMonthName = new Date().toLocaleString('default', { month: 'long' });
@@ -39,7 +40,7 @@ export const MilestoneBar: React.FC<MilestoneBarProps> = ({
 
         {/* Milestone Gift Pins along the track */}
         {milestones.map((milestone) => {
-          const positionPercent = (milestone.day / totalPosts) * 100;
+          const positionPercent = (milestone.day / safeTotal) * 100;
           const isReached = publishedCount >= milestone.day;
           const isFinal = milestone.day === 100;
 

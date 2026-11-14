@@ -97,7 +97,9 @@ export const ListView: React.FC<ListViewProps> = ({ posts, onSelectDay }) => {
 
                   {/* ETA */}
                   <td className="py-3 px-4 whitespace-nowrap text-stone-500 font-medium">
-                    {new Date(post.publishDateETA).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                    {post.publishDateETA && !isNaN(new Date(post.publishDateETA).getTime())
+                      ? new Date(post.publishDateETA).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
+                      : '-'}
                   </td>
 
                   {/* Views */}

@@ -172,7 +172,9 @@ export const Grid100: React.FC<Grid100Props> = ({ posts, onSelectDay, activeFilt
                   <div className="flex items-center justify-between text-[10px] text-stone-400 pt-1 border-t border-stone-800">
                     <span className="flex items-center gap-1">
                       <Clock className="w-3 h-3 text-stone-500" />
-                      {new Date(post.publishDateETA).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                      {post.publishDateETA && !isNaN(new Date(post.publishDateETA).getTime())
+                        ? new Date(post.publishDateETA).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
+                        : 'ETA TBD'}
                     </span>
                     <span className="font-semibold text-amber-400">
                       {getPlatformLabel(post.platform)}
