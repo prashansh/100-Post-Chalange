@@ -56,6 +56,7 @@ interface AuthContextValue {
   sendPhoneOtp: (phone: string, buttonId: string) => Promise<ConfirmationResult>;
   confirmPhoneOtp: (confirmation: ConfirmationResult, code: string) => Promise<void>;
   signInAsGuest: (guestName?: string) => Promise<void>;
+  bypassToDashboard: () => void;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
   setProfileDirectly: (p: UserProfile) => void;
@@ -381,6 +382,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         sendPhoneOtp,
         confirmPhoneOtp,
         signInAsGuest,
+        bypassToDashboard: () => { void signInAsGuest('Creator'); },
         signOut,
         refreshProfile,
         setProfileDirectly,

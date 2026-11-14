@@ -12,6 +12,7 @@ import {
   CheckCircle2,
   KeyRound,
   User as UserIcon,
+  UserPlus,
   RefreshCw,
   LogIn,
 } from 'lucide-react';

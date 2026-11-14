@@ -4,11 +4,12 @@ import { getFirestore } from 'firebase/firestore';
 import { getAnalytics } from 'firebase/analytics';
 
 const getEnv = (key: string, fallback: string = '') => {
-  if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env[key]) {
-    return import.meta.env[key];
+  if (typeof import.meta !== 'undefined' && import.meta.env && (import.meta.env as any)[key]) {
+    return (import.meta.env as any)[key];
   }
-  if (typeof process !== 'undefined' && process.env && process.env[key]) {
-    return process.env[key];
+  const proc = (globalThis as any).process;
+  if (typeof proc !== 'undefined' && proc.env && proc.env[key]) {
+    return proc.env[key];
   }
   return fallback;
 };
