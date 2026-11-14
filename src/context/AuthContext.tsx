@@ -32,6 +32,7 @@ interface AuthContextValue {
   profile: UserProfile | null;
   authStatus: AuthStatus;
   signInWithGoogle: () => Promise<void>;
+  signInAsGuest: (guestName?: string) => Promise<void>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
   setProfileDirectly: (p: UserProfile) => void;
@@ -125,6 +126,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   useEffect(() => {
+    // Check if guest session is active
+    const isGuest = localStorage.getItem('creator_toolkit_guest_session');
+    if (isGuest === 'true') {
+      const guestUid = localStorage.getItem('creator_toolkit_guest_uid') || 'guest_creator';
+      const cached = getCachedProfile(guestUid) || {
+        uid: guestUid,
+        email: 'creator@local.app',
+        displayName: 'Guest Creator',
+        photoURL: '',
+        creatorHandle: '@creator',
+        country: 'Global',
+        dateOfBirth: '2000-01-01',
+        niche: 'Content Creation & Tech',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        challengeStartDate: new Date().toISOString().slice(0, 10),
+      };
+      setUser({ uid: guestUid, displayName: cached.displayName, email: cached.email } as unknown as User);
+      setProfile(cached);
+      setAuthStatus('authenticated');
+      return;
+    }
+
     // Safety fallback: only if auth completely fails to fire after 6 seconds
     const safetyTimer = setTimeout(() => {
       setAuthStatus((current) => {
@@ -145,9 +169,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (firebaseUser) {
         await resolveUser(firebaseUser);
       } else {
-        setUser(null);
-        setProfile(null);
-        setAuthStatus('unauthenticated');
+        const guestCheck = localStorage.getItem('creator_toolkit_guest_session');
+        if (guestCheck !== 'true') {
+          setUser(null);
+          setProfile(null);
+          setAuthStatus('unauthenticated');
+        }
       }
     });
 
@@ -156,6 +183,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       unsubscribe();
     };
   }, []);
+
+  const signInAsGuest = async (guestName: string = 'Guest Creator') => {
+    const guestUid = 'guest_creator';
+    const guestProfile: UserProfile = getCachedProfile(guestUid) || {
+      uid: guestUid,
+      email: 'creator@local.app',
+      displayName: guestName,
+      photoURL: '',
+      creatorHandle: '@creator',
+      country: 'Global',
+      dateOfBirth: '2000-01-01',
+      niche: 'Content Creation & Tech',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      challengeStartDate: new Date().toISOString().slice(0, 10),
+    };
+    localStorage.setItem('creator_toolkit_guest_session', 'true');
+    localStorage.setItem('creator_toolkit_guest_uid', guestUid);
+    localStorage.setItem(getProfileCacheKey(guestUid), JSON.stringify(guestProfile));
+    setUser({ uid: guestUid, displayName: guestName, email: 'creator@local.app' } as unknown as User);
+    setProfile(guestProfile);
+    setAuthStatus('authenticated');
+  };
 
   const signInWithGoogle = async () => {
     setAuthStatus('loading');
@@ -172,7 +222,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const signOut = async () => {
-    await firebaseSignOut(auth);
+    localStorage.removeItem('creator_toolkit_guest_session');
+    localStorage.removeItem('creator_toolkit_guest_uid');
+    try {
+      await firebaseSignOut(auth);
+    } catch (e) {
+      // ignore
+    }
     setUser(null);
     setProfile(null);
     setAuthStatus('unauthenticated');
@@ -185,6 +241,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         profile,
         authStatus,
         signInWithGoogle,
+        signInAsGuest,
         signOut,
         refreshProfile,
         setProfileDirectly,

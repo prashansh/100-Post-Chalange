@@ -518,8 +518,8 @@ app.post('/api/posts/reset', requireAuth, (req, res) => {
 const DIST_DIR = path.resolve(process.cwd(), 'dist');
 if (fs.existsSync(DIST_DIR)) {
   app.use(express.static(DIST_DIR));
-  app.get('*', (req, res, next) => {
-    if (req.path.startsWith('/api')) {
+  app.use((req, res, next) => {
+    if (req.method !== 'GET' || req.path.startsWith('/api')) {
       return next();
     }
     res.sendFile(path.join(DIST_DIR, 'index.html'));

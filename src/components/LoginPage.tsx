@@ -12,7 +12,7 @@ const FEATURES = [
 ];
 
 export const LoginPage: React.FC = () => {
-  const { signInWithGoogle } = useAuth();
+  const { signInWithGoogle, signInAsGuest } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -27,13 +27,13 @@ export const LoginPage: React.FC = () => {
       if (code === 'auth/popup-closed-by-user' || code === 'auth/cancelled-popup-request') {
         setError('Sign-in was closed before completing. Please try again.');
       } else if (code === 'auth/popup-blocked') {
-        setError('Popup blocked by browser. Please allow popups for localhost to sign in.');
+        setError('Popup blocked by browser. Please allow popups for this site to sign in.');
       } else if (code === 'auth/operation-not-allowed') {
         setError('Google Sign-In is not enabled in Firebase Console.');
       } else if (code === 'auth/unauthorized-domain') {
-        setError('Domain not authorized in Firebase Console.');
+        setError(`Domain (${window.location.hostname}) is not authorized in Firebase Console yet. You can use Instant Access below or add ${window.location.hostname} in Firebase Console > Authentication > Settings > Authorized domains.`);
       } else {
-        setError(`Sign-in failed (${code || 'error'}). Please try again.`);
+        setError(`Sign-in failed (${code || err?.message || 'error'}). You can also use Instant Access below.`);
       }
     }
   };
@@ -136,6 +136,22 @@ export const LoginPage: React.FC = () => {
             {!loading && (
               <ArrowRight className="w-4 h-4 text-stone-400 group-hover:text-stone-700 group-hover:translate-x-0.5 transition-all ml-auto" />
             )}
+          </button>
+
+          {/* Or Divider */}
+          <div className="relative my-4 flex items-center justify-center">
+            <div className="border-t border-stone-200 w-full" />
+            <span className="bg-[#faf7f2] px-3 text-xs font-bold uppercase tracking-wider text-stone-400">or</span>
+            <div className="border-t border-stone-200 w-full" />
+          </div>
+
+          {/* Instant / Guest Sign-In */}
+          <button
+            onClick={() => signInAsGuest('Prashansh')}
+            className="w-full flex items-center justify-center gap-2 bg-amber-400 hover:bg-amber-300 active:bg-amber-500 text-stone-900 font-black text-sm border-2 border-stone-900 rounded-2xl px-6 py-3.5 transition-all shadow-sm hover:shadow-md cursor-pointer group"
+          >
+            <span>⚡ Instant Creator Access (1-Click)</span>
+            <ArrowRight className="w-4 h-4 text-stone-800 group-hover:translate-x-0.5 transition-all ml-auto" />
           </button>
 
           <p className="text-center text-xs text-stone-400 font-medium mt-4">
