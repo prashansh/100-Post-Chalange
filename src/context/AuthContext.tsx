@@ -5,11 +5,25 @@ import {
   signInWithPopup,
   signInWithRedirect,
   getRedirectResult,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  sendPasswordResetEmail,
+  signInWithPhoneNumber,
+  RecaptchaVerifier,
+  ConfirmationResult,
+  updateProfile,
   signOut as firebaseSignOut,
 } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
-import { auth, googleProvider, db } from '../firebase';
+import { auth, googleProvider, appleProvider, db } from '../firebase';
 import { withTimeout } from '../utils/firestore';
+
+declare global {
+  interface Window {
+    recaptchaVerifier?: any;
+    confirmationResult?: any;
+  }
+}
 
 export interface UserProfile {
   uid: string;
@@ -32,6 +46,12 @@ interface AuthContextValue {
   profile: UserProfile | null;
   authStatus: AuthStatus;
   signInWithGoogle: () => Promise<void>;
+  signInWithApple: () => Promise<void>;
+  signInWithEmail: (email: string, pass: string) => Promise<void>;
+  signUpWithEmail: (email: string, pass: string, name?: string) => Promise<void>;
+  resetPassword: (email: string) => Promise<void>;
+  sendPhoneOtp: (phone: string, buttonId: string) => Promise<ConfirmationResult>;
+  confirmPhoneOtp: (confirmation: ConfirmationResult, code: string) => Promise<void>;
   signInAsGuest: (guestName?: string) => Promise<void>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
@@ -221,6 +241,71 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const signInWithApple = async () => {
+    setAuthStatus('loading');
+    try {
+      await signInWithPopup(auth, appleProvider);
+    } catch (err: any) {
+      if (['auth/popup-blocked', 'auth/popup-closed-by-user', 'auth/cancelled-popup-request'].includes(err?.code)) {
+        await signInWithRedirect(auth, appleProvider);
+      } else {
+        setAuthStatus('unauthenticated');
+        throw err;
+      }
+    }
+  };
+
+  const signInWithEmail = async (email: string, pass: string) => {
+    setAuthStatus('loading');
+    try {
+      const res = await signInWithEmailAndPassword(auth, email.trim(), pass);
+      await resolveUser(res.user);
+    } catch (err) {
+      setAuthStatus('unauthenticated');
+      throw err;
+    }
+  };
+
+  const signUpWithEmail = async (email: string, pass: string, name?: string) => {
+    setAuthStatus('loading');
+    try {
+      const res = await createUserWithEmailAndPassword(auth, email.trim(), pass);
+      if (name && name.trim()) {
+        await updateProfile(res.user, { displayName: name.trim() });
+      }
+      await resolveUser(res.user);
+    } catch (err) {
+      setAuthStatus('unauthenticated');
+      throw err;
+    }
+  };
+
+  const resetPassword = async (email: string) => {
+    await sendPasswordResetEmail(auth, email.trim());
+  };
+
+  const sendPhoneOtp = async (phoneNumber: string, buttonId: string): Promise<ConfirmationResult> => {
+    if (!window.recaptchaVerifier) {
+      window.recaptchaVerifier = new RecaptchaVerifier(auth, buttonId, {
+        size: 'invisible',
+      });
+    }
+    const confirmation = await signInWithPhoneNumber(auth, phoneNumber.trim(), window.recaptchaVerifier);
+    window.confirmationResult = confirmation;
+    return confirmation;
+  };
+
+  const confirmPhoneOtp = async (confirmation: ConfirmationResult, code: string) => {
+    setAuthStatus('loading');
+    try {
+      const res = await confirmation.confirm(code.trim());
+      await resolveUser(res.user);
+    } catch (err) {
+      setAuthStatus('unauthenticated');
+      throw err;
+    }
+  };
+
   const signOut = async () => {
     localStorage.removeItem('creator_toolkit_guest_session');
     localStorage.removeItem('creator_toolkit_guest_uid');
@@ -241,6 +326,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         profile,
         authStatus,
         signInWithGoogle,
+        signInWithApple,
+        signInWithEmail,
+        signUpWithEmail,
+        resetPassword,
+        sendPhoneOtp,
+        confirmPhoneOtp,
         signInAsGuest,
         signOut,
         refreshProfile,
