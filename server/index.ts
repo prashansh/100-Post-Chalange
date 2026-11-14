@@ -1,5 +1,7 @@
 import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
+import path from 'node:path';
+import fs from 'node:fs';
 import { db } from './db.js';
 
 const app = express();
@@ -511,6 +513,18 @@ app.post('/api/posts/reset', requireAuth, (req, res) => {
 
   res.json({ success: true, message: 'Challenge reset successfully' });
 });
+
+// Serve frontend static assets in production
+const DIST_DIR = path.resolve(process.cwd(), 'dist');
+if (fs.existsSync(DIST_DIR)) {
+  app.use(express.static(DIST_DIR));
+  app.get('*', (req, res, next) => {
+    if (req.path.startsWith('/api')) {
+      return next();
+    }
+    res.sendFile(path.join(DIST_DIR, 'index.html'));
+  });
+}
 
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`[API Server] Running on http://127.0.0.1:${PORT}`);

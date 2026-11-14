@@ -1,7 +1,7 @@
 import { ContentPost, MilestoneReward, CreatorProfile } from '../types';
 import { UserProfile } from '../context/AuthContext';
 
-const API_BASE = 'http://127.0.0.1:3001';
+const API_BASE = import.meta.env.VITE_API_BASE || '';
 
 const getHeaders = (uid: string) => ({
   'Content-Type': 'application/json',
