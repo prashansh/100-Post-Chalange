@@ -13,6 +13,7 @@ import {
   KeyRound,
   User as UserIcon,
   RefreshCw,
+  LogIn,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { ConfirmationResult } from 'firebase/auth';
@@ -70,9 +71,11 @@ export const LoginPage: React.FC = () => {
       case 'auth/popup-blocked':
         return 'Browser blocked the popup. Please allow popups for this site.';
       case 'auth/user-not-found':
+        return 'No account found with this email. Click "Create one" below to register.';
       case 'auth/wrong-password':
+        return 'Incorrect password. Click "Forgot password?" if you need to reset it.';
       case 'auth/invalid-credential':
-        return 'Invalid email or password. Please check your credentials.';
+        return 'Invalid credentials. If you are new, click "Create one" below to register your account.';
       case 'auth/email-already-in-use':
         return 'An account with this email already exists. Try signing in.';
       case 'auth/weak-password':
@@ -88,7 +91,7 @@ export const LoginPage: React.FC = () => {
       case 'auth/unauthorized-domain':
         return `Domain ${window.location.hostname} is not authorized in Firebase Console.`;
       case 'auth/operation-not-allowed':
-        return 'This sign-in provider is not enabled in Firebase Console.';
+        return 'Provider needs configuration in Firebase (Apple requires Apple Developer Keys; Phone requires SMS quota or test numbers).';
       default:
         return err?.message || 'Authentication failed. Please try again.';
     }
